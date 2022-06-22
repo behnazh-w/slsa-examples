@@ -1,0 +1,52 @@
+# This is a reusable workflow that is called by other
+# Actions workflows.  It checks, tests, and builds the package.
+# This trusted builder uses different VMs to 1) build the project
+# and 2) generate the SLSA provenance.
+
+name: Build the package
+on:
+  workflow_call:
+    outputs:
+      tarball-sha256:
+        description: The hash of the package tarball
+        value: ${{ jobs.build.outputs.tarball-sha256 }}
+permissions:
+  contents: read
+env:
+  GENERATED_PACKAGE_DIR: dist
+
+jobs:
+  build:
+    outputs:
+      tarball-sha256: ${{ steps.compute-hash.outputs.tarball-sha256 }}
+    name: Check Python
+    runs-on: [ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@d0651293c4a5a52e711f25b41b05b2212f385d28
+    - name: Set up Python
+      uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade --upgrade-strategy eager --editable .[hooks,dev,test,docs]
+      env:
+        PYTHON: python
+    - name: Build the package
+      run: flit build --setup-py --format sdist
+    - name: Compute package hash
+      id: compute-hash
+      shell: bash
+      run: |
+        set -euo pipefail
+        TARBALL_PATH=$(find ${{ env.GENERATED_PACKAGE_DIR }} -name "*.tar.gz")
+        DIGEST_TARBALL=$(sha256sum $TARBALL_PATH | awk '{print $1}'| base64 -w0)
+        echo "::set-output name=tarball-sha256::$DIGEST_TARBALL"
+    - name: Upload the package artifact
+      uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+      with:
+        name: package
+        path: ${{ env.GENERATED_PACKAGE_DIR }}
+        if-no-files-found: error

@@ -1,0 +1,24 @@
+name: Pull Request
+on:
+  pull_request:
+    branches: [main]
+    types:
+    - opened
+    - edited
+    - synchronize
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yaml
+
+  provenance:
+    needs: build
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
+    with:
+      base64-subjects: ${{ needs.build.outputs.tarball-sha256 }}
