@@ -1,1 +1,1 @@
-# slsa-examples
+# Example Python Package to test SLSA
