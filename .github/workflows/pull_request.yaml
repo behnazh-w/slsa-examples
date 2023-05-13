@@ -1,0 +1,26 @@
+name: PR test
+on:
+  pull_request:
+    branches:
+    - '*'
+    types:
+    - opened
+    - reopened
+    - synchronize
+    - converted_to_draft
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name:  test commit
+      run: |
+        git checkout test
+        touch test.txt
+        git add test.txt
+        git commit -m "test: add test.txt"
+        git push
