@@ -19,6 +19,8 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
     - name:  test commit
       run: |
+        git config --global user.name "behnazh-w"
+        git config --global user.email "behnazh-w@users.noreply.github.com"
         git checkout test
         touch test.txt
         git add test.txt
