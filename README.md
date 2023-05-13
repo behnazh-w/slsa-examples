@@ -1,1 +1,1 @@
-# Example Python Package to test SLSA
+# Example Python Package to test SLSA provenance 
